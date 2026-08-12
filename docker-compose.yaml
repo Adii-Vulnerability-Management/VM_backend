@@ -1,0 +1,26 @@
+version: "3.8"
+ 
+services:
+  nestjs:
+    # Build using Dockerfile and the "production" target stage
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production  # Use the "production" stage of the Dockerfile
+    ports:
+      - "8005:8005"  # Expose port 8005 for external access
+    # environment:
+    #   NODE_ENV: production  # Set environment variable for production
+    env_file:
+      - .env
+    restart: always  # Restart the container if it fails
+    networks:
+      - appnet  # Network configuration for isolation
+    dns:
+      - 8.8.8.8
+      - 0.0.0.0
+ 
+networks:
+  appnet:
+    # driver: bridge  # Bridge network for service communication
+    external: true  # Use an existing external network

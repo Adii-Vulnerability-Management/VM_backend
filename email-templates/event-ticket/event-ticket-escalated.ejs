@@ -1,0 +1,4 @@
+<h1>Event Escalated</h1>
+<p>Ticket <%= ticketNo %> escalated from <%= fromLevel %> to <%= toLevel %> by <%= escalatedBy %>.</p>
+<% if (comment) { %><p>Comment: <%= comment %></p><% } %>
+<p>View it <a href="<%= portalLink %>">here</a>.</p>

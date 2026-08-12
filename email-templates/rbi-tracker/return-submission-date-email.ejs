@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Submission Reminder Notification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f7fa;
+        margin: 0;
+        padding: 0;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 30px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #ddd;
+      }
+
+      .email-header {
+        background-color: #d9534f;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .email-body {
+        padding: 20px 30px;
+      }
+
+      .email-body p {
+        margin: 15px 0;
+        font-size: 14px;
+      }
+
+      .details {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-left: 4px solid #084179;
+        border-radius: 4px;
+      }
+
+      .details h2 {
+        margin-bottom: 10px;
+        font-size: 16px;
+        color: #084179;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+      }
+
+      .details p {
+        margin: 5px 0;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-top: 20px;
+        color: #ffffff;
+        background-color: #084179;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .button:hover {
+        background-color: #063358;
+      }
+
+      .email-footer {
+        padding: 15px;
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+        background-color: #f1f1f1;
+        border-top: 1px solid #ddd;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="email-container">
+      <div class="email-header">Submission Reminder</div>
+      <div class="email-body">
+        <p>Dear <strong><%= employeeName %></strong>,</p>
+        <p>
+          This is a friendly reminder that <strong>today</strong> is the
+          submission deadline for the return assigned to you. Please find the
+          details below:
+        </p>
+
+        <div class="details">
+          <h2>Return Details</h2>
+          <p><strong>Return Name:</strong> <%= returnName %></p>
+          <p><strong>Description:</strong> <%= returnDescription %></p>
+          <p><strong>Frequency:</strong> <%= frequency %></p>
+          <p><strong>Submission Date:</strong> <%= submissionDate %></p>
+          <p><strong>Report Code:</strong> <%= reportCode %></p>
+          <p><strong>Department Concerned:</strong> <%= departmentConcerned %></p>
+          <p>
+            <strong>Related Circulars:</strong> <%= detailsOfRelatedCirculars %>
+          </p>
+        </div>
+
+        <p>
+          Please ensure the return is submitted before the end of the day to
+          meet the compliance requirements. You can access your portal to
+          complete the submission using the button below:
+        </p>
+
+        <a href="<%= submissionUrl %>" class="button">Submit Now</a>
+
+        <p>
+          If you have any questions or face any challenges, please do not
+          hesitate to reach out to your manager or the compliance team.
+        </p>
+
+        <p>Best Regards,</p>
+        <p><strong><%= userCompanyName %> Team</strong></p>
+      </div>
+
+      <div class="email-footer">
+        This is an automated email. Please do not reply.<br />
+      </div>
+    </div>
+  </body>
+</html>

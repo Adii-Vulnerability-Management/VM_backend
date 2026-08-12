@@ -1,0 +1,80 @@
+name: GRC3 Backend DEMO - Deploy (EC2 build + PM2 restart)
+
+on:
+  push:
+    branches:
+      - demo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------------------------------
+      # 1. Checkout repo
+      # ---------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------
+      # Slack: Deployment Started
+      # ---------------------------------
+      - name: Slack - Deployment Started
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🚀 *GRC3 DEMO Backend deployment started*\n• Branch: demo\n• Triggered by: ${{ github.actor }}\n• Building on DEMO EC2..."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # ---------------------------------
+      # 2. Deploy + Build on DEMO EC2
+      # ---------------------------------
+      - name: Deploy & Build on DEMO EC2 (Backend)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEMO_SERVER_HOST }}
+          username: ${{ secrets.DEMO_SERVER_USER }}
+          key: ${{ secrets.DEMO_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "🔄 Pulling latest backend code..."
+            cd /home/ubuntu/Dev_GRC/Backend-GRC3
+            git pull
+
+            echo "🏗️ Building backend on DEMO EC2..."
+            npm run build
+
+            echo "🔁 Restarting DEMO Backend PM2..."
+            pm2 restart nest-backend
+
+      # ---------------------------------
+      # Slack: Deployment Successful
+      # ---------------------------------
+      - name: Slack - Deployment Successful
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "✅ *GRC3 DEMO Backend deployment successful*\n• Branch: demo\n• Built & Deployed on DEMO EC2\n• PM2 restarted: next-backend\n• Deployed by: ${{ github.actor }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # ---------------------------------
+      # Slack: Deployment Failed
+      # ---------------------------------
+      - name: Slack - Deployment Failed
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🔥 *GRC3 DEMO Backend deployment FAILED*\n• Branch: demo\n• Triggered by: ${{ github.actor }}\n• DEMO Backend Build FAILED on EC2\n• PM2 NOT restarted\n• Check logs urgently!"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

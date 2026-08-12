@@ -1,0 +1,30 @@
+# Ignore node_modules in the context (local machine's node_modules are mounted anyway in development)
+node_modules/
+
+# Ignore all local environment files (like .env)
+.env
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore npm debug log
+npm-debug.log
+
+# Ignore any IDE or editor files (e.g., VS Code, JetBrains)
+.vscode/
+.idea/
+
+# Ignore any test or temporary directories/files
+tests/
+test/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Ignore build files from the host machine
+dist/
+
+# Optional: Ignore logs
+*.log

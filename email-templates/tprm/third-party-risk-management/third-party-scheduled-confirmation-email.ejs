@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor Assessment Request</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .email-container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+    }
+
+    .email-body {
+      padding: 20px 30px;
+    }
+
+    .email-body p {
+      margin: 15px 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .highlight {
+      background-color: #f1f9ff;
+      padding: 10px;
+      border-left: 4px solid #0073e6;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .button-link {
+      display: inline-block;
+      padding: 10px 15px;
+      background-color: #0073e6;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 14px;
+      margin: 15px 0;
+    }
+
+    .button-link:hover {
+      background-color: #005bb5;
+    }
+
+    .details h2 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      color: #084179;
+    }
+
+    .details p {
+      margin: 3px 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .details a {
+      color: #0073e6;
+      text-decoration: none;
+    }
+
+    .details a:hover {
+      text-decoration: underline;
+    }
+
+    .assessment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    .assessment-table td {
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+      color: #555;
+    }
+
+    .assessment-table td:first-child {
+      background-color: #f9fafb;
+      color: #333;
+      font-weight: bold;
+      width: 40%;
+    }
+
+    .email-footer {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    .green-line {
+      width: 4px;
+      background-color: #00b050;
+      align-self: stretch;
+      margin-right: 15px;
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .company-logo img {
+      max-width: 75px;
+      height: auto;
+      margin-right: 15px;
+    }
+
+    .automated-note {
+      padding: 12px 20px;
+      background-color: #f9f9f9;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+      border-top: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="email-container">
+
+    <!-- Body Section -->
+    <div class="email-body">
+      <p>Dear <strong><%= leadResponderName || 'Third Party Responder' %></strong>,</p>
+
+      <p><strong>Subject:</strong> Vendor Assessment Request</p>
+
+      <p>
+        I hope this letter finds you well. We appreciate the ongoing partnership between our companies
+        and the valuable products/services that your company provides. As part of our commitment to
+        maintaining the highest quality and standards, we periodically conduct vendor assessments to
+        ensure compliance, efficiency, and quality control.
+      </p>
+
+      <p>
+        You have been assigned a third-party assessment by
+        <strong><%= userCompanyName || 'the organization' %></strong>.
+        We have decided to conduct this assessment to foster mutual growth and drive meaningful
+        improvements together.
+      </p>
+
+      <!-- Company Reference -->
+      <div class="details highlight">
+        <h2>Company Reference</h2>
+        <p><%= userCompanyName || '-' %></p>
+        <p><%= userCompanyAddress || '-' %></p>
+        <p>Email: <a href="mailto:<%= userEmail || '' %>"><%= userEmail || '-' %></a></p>
+        <p>Contact: <%= userContactNumber || '-' %></p>
+      </div>
+
+      <!-- Assessment Details -->
+      <table class="assessment-table" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>Third Party Name</td>
+          <td><%= thirdPartyName || '-' %></td>
+        </tr>
+        <tr>
+          <td>Third Party Type</td>
+          <td><%= thirdPartyType || '-' %></td>
+        </tr>
+        <tr>
+          <td>Assessment</td>
+          <td><%= scheduleTitle || assessmentId || '-' %></td>
+        </tr>
+        <tr>
+          <td>Assessment Due Date</td>
+          <td>
+            <% if (assessmentDueDate) { %>
+              <%= new Date(assessmentDueDate).toLocaleDateString() %>
+            <% } else { %>
+              -
+            <% } %>
+          </td>
+        </tr>
+        <tr>
+          <td>Submission Due Date</td>
+          <td>
+            <% if (submissionDueDate) { %>
+              <%= new Date(submissionDueDate).toLocaleDateString() %>
+            <% } else { %>
+              -
+            <% } %>
+          </td>
+        </tr>
+        <tr>
+          <td>Review Due Date</td>
+          <td>
+            <% if (reviewDueDate) { %>
+              <%= new Date(reviewDueDate).toLocaleDateString() %>
+            <% } else { %>
+              -
+            <% } %>
+          </td>
+        </tr>
+      </table>
+
+      <p>
+        We are providing access to our portal to complete the questionnaire. Login and password
+        details may be sent in separate emails.
+      </p>
+
+      <% if (loginLink) { %>
+        <p style="text-align:center;">
+          <a href="<%= loginLink %>" class="button-link">
+            Open Assessment Portal
+          </a>
+        </p>
+      <% } %>
+
+      <p>
+        The assessment will encompass various aspects of our partnership, including quality assurance,
+        supply chain efficiency, contractual terms compliance, and an overall business relationship
+        assessment. We believe this assessment will help identify areas where we can collaborate to
+        optimize operations and enhance the service quality we provide our customers.
+      </p>
+
+      <p>I appreciate your cooperation.</p>
+
+      <p>Best Regards,</p>
+
+      <p>
+        <strong><%= leadReviewerName || '-' %></strong><br />
+        <%= leadReviewerTitle || 'Lead Reviewer' %><br />
+        Email: <%= leadReviewerEmail || '-' %> |
+        Contact: <%= leadReviewerContactNumber || '-' %>
+      </p>
+    </div>
+
+    <!-- Footer Section -->
+    <div class="email-footer">
+      <div class="green-line"></div>
+
+      <div class="footer-content">
+        <% if (companyLogoUrl) { %>
+          <div class="company-logo">
+            <img src="<%= companyLogoUrl %>" alt="Company Logo" />
+          </div>
+        <% } %>
+
+        <div class="details">
+          <h2><%= userCompanyName || 'TPRM Team' %></h2>
+          <p><%= userCompanyAddress || '-' %></p>
+          <p>Email: <a href="mailto:<%= userEmail || '' %>"><%= userEmail || '-' %></a></p>
+          <p>Contact: <%= userContactNumber || '-' %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="automated-note">
+      This is an automated email. Please do not reply directly to this message.
+    </div>
+
+  </div>
+</body>
+
+</html>
+

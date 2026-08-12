@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Backend Local Dashboard</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: #0f172a;
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .card {
+        width: min(640px, 100%);
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 1.8rem;
+      }
+
+      p {
+        color: #cbd5e1;
+        line-height: 1.6;
+      }
+
+      button {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border: none;
+        border-radius: 8px;
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      .status {
+        margin-top: 16px;
+        padding: 12px 14px;
+        background: #111827;
+        border: 1px solid #374151;
+        border-radius: 10px;
+        min-height: 56px;
+        white-space: pre-wrap;
+      }
+
+      .ok {
+        color: #86efac;
+      }
+
+      .error {
+        color: #fda4af;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Backend Local Dashboard</h1>
+      <p>This page checks the local NestJS backend and shows whether the health endpoint is responding.</p>
+      <button id="checkBtn">Check backend health</button>
+      <div id="status" class="status">Waiting for a check...</div>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const checkBtn = document.getElementById('checkBtn');
+
+      async function checkHealth() {
+        statusEl.className = 'status';
+        statusEl.textContent = 'Checking health endpoint...';
+
+        try {
+          const response = await fetch('/priv/health');
+          const data = await response.json();
+
+          statusEl.className = 'status ok';
+          statusEl.textContent = `Status: ${response.status}\n${JSON.stringify(data, null, 2)}`;
+        } catch (error) {
+          statusEl.className = 'status error';
+          statusEl.textContent = `Request failed: ${error.message}`;
+        }
+      }
+
+      checkBtn.addEventListener('click', checkHealth);
+      checkHealth();
+    </script>
+  </body>
+</html>

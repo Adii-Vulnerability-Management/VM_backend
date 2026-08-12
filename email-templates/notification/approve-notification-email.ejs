@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Request Approval Notification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 30px auto;
+        background-color: #ffffff;
+        padding: 20px;
+        border: 1px solid #dddddd;
+      }
+      .header {
+        background-color: #5bc0de;
+        color: #ffffff;
+        padding: 10px;
+        text-align: center;
+      }
+      .content {
+        margin: 20px 0;
+        line-height: 1.6;
+      }
+      .footer {
+        font-size: 0.8em;
+        color: #777777;
+        text-align: center;
+        border-top: 1px solid #dddddd;
+        padding-top: 10px;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Request Approval Notification</h1>
+      </div>
+      <div class="content">
+        <p>Hello <%= name %>,</p>
+        <p>Your request has been approved. Below are the details:</p>
+        <ul>
+          <li><strong>Request ID:</strong> <%= requestId %></li>
+          <li><strong>Request Type:</strong> <%= requestType %></li>
+          <li><strong>Recipient:</strong> <%= recipientEmail %></li>
+          <li><strong>Details:</strong> <%= details %></li>
+        </ul>
+        <p>If you have any questions, feel free to reach out to us.</p>
+      </div>
+      <div class="footer">
+        <p>This is an automated message. Please do not reply.</p>
+      </div>
+    </div>
+  </body>
+</html>

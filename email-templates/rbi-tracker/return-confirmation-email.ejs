@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Return Assignment Notification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f9fc;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: 30px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+      }
+      .email-header {
+        background-color: #084179;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .email-body {
+        padding: 20px 30px;
+      }
+      .email-body p {
+        margin: 15px 0;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .details {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-left: 4px solid #084179;
+        border-radius: 4px;
+      }
+      .details h3 {
+        margin: 0 0 10px;
+        font-size: 16px;
+        color: #084179;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+      }
+      .details p {
+        margin: 5px 0;
+        font-size: 14px;
+        color: #555;
+      }
+      .email-footer {
+        padding: 15px;
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+        background-color: #f1f1f1;
+        border-top: 1px solid #ddd;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-top: 20px;
+        color: #ffffff;
+        background-color: #084179;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .button:hover {
+        background-color: #063358;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="email-container">
+      <div class="email-header">Return Assignment Notification</div>
+      <div class="email-body">
+        <p>Dear <strong><%= employeeName %></strong>,</p>
+        <p>
+          You have been assigned a return to submit. Below are the details for
+          your reference:
+        </p>
+
+        <div class="details">
+          <h3>Assigned Return Details</h3>
+          <p><strong>Return Name:</strong> <%= returnName %></p>
+          <p><strong>Description:</strong> <%= returnDescription %></p>
+          <p><strong>Frequency:</strong> <%= frequency %></p>
+          <p><strong>Submission Date:</strong> <%= submissionDate %></p>
+          <p><strong>Report Code:</strong> <%= reportCode %></p>
+          <p><strong>Department Concerned:</strong> <%= departmentConcerned %></p>
+          <p><strong>Related Circulars:</strong> <%= relatedCirculars %></p>
+        </div>
+
+        <p>
+          You can track the submission dates, detailed requirements, and
+          progress on your portal. Kindly ensure the timely submission of the
+          return to comply with the requirements.
+        </p>
+        <a href="<%= portalLink %>" class="button">Go to Portal</a>
+
+        <p>
+          If you have any questions or require assistance, feel free to reach
+          out to your manager.
+        </p>
+
+        <p>Best Regards,</p>
+        <p><strong><%= userName %></strong></p>
+      </div>
+
+      <div class="email-footer">
+        This is an automated email. Please do not reply.<br />
+      </div>
+    </div>
+  </body>
+</html>

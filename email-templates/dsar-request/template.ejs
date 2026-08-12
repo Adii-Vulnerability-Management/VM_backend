@@ -1,0 +1,102 @@
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    color: #333;
+  }
+  h2 {
+    color: #004aad;
+  }
+  h3 {
+    color: #0056b3;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+  }
+  h4 {
+    color: #333;
+    margin-top: 20px;
+  }
+  p {
+    margin: 5px 0;
+  }
+  .section {
+    margin-bottom: 25px;
+  }
+  .highlight {
+    font-weight: bold;
+    color: #000;
+  }
+  .consent-box {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-left: 4px solid #004aad;
+    margin-top: 10px;
+  }
+  hr {
+    border: 0;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+  }
+</style>
+
+<h2>New DSAR Request</h2>
+
+<div class="section">
+  <h3>Submitted User Details</h3>
+  <p><span class="highlight">Name:</span> <%= fullName %></p>
+  <p><span class="highlight">Email:</span> <%= email %></p>
+  <p><span class="highlight">Country:</span> <%= country %></p>
+  <p><span class="highlight">Request Types:</span> <%= requestTypes %></p>
+  <p><span class="highlight">Notes:</span> <%= notes %></p>
+  <p><span class="highlight">Domain:</span> <%= domainName %></p>
+  <p><span class="highlight">CMP User ID:</span> <%= cmpUserId %></p>
+</div>
+
+<hr />
+
+<div class="section">
+  <h3>Consent Form</h3>
+
+  <div class="consent-box">
+    <p>This consent form is issued to inform you of the purposes for which your personal data
+      will be processed and to obtain your explicit consent for the same, in compliance with
+      the <strong>Digital Personal Data Protection Act, 2023 (“DPDPA”)</strong>.
+    </p>
+
+    <h4>1. Information We Will Collect</h4>
+    <p><strong>Basic Information:</strong> Full legal name, residential address, personal email, date of birth, mobile number.</p>
+    <p><strong>Financial Details:</strong> Bank account numbers, payment card details, billing information.</p>
+    <p><strong>Technical Data:</strong> IP addresses, device identifiers, interaction logs.</p>
+
+    <h4>2. Purpose of Processing</h4>
+    <p><strong>Service Provision:</strong> To provide requested services or products.</p>
+    <p><strong>Legal Compliance:</strong> To comply with applicable laws and regulations.</p>
+    <p><strong>Marketing Communications:</strong> To send marketing materials (with explicit consent).</p>
+    <p><strong>Data Analytics:</strong> To improve services, products, and user experience.</p>
+
+    <h4>3. Legal Basis for Processing</h4>
+    <p>Your consent is free, specific, informed, unconditional, and unambiguous as per Section 6 of DPDPA.</p>
+
+    <h4>4. Rights Available to You</h4>
+    <p>You have the following rights under DPDPA:</p>
+    <ul>
+      <li>Access your data and processing activities</li>
+      <li>Correct or complete your personal data</li>
+      <li>Request erasure of unnecessary data</li>
+      <li>Withdraw consent anytime (without affecting prior processing)</li>
+      <li>Nominate someone to exercise your rights in case of death/incapacity</li>
+      <li>Register grievances with the Data Fiduciary</li>
+    </ul>
+
+    <h4>5. Consent Declaration</h4>
+    <p>
+      By submitting this request, you confirm that you have read and understood the consent form
+      and agree to the processing of your personal data as described.
+    </p>
+    <p>
+      I, <strong><%= fullName %></strong>, using the email address <strong><%= email %></strong>,
+      hereby give my free, specific, informed, unconditional, and unambiguous consent to
+      [Insert Organisation Name] for processing my personal data for the purposes mentioned above.
+    </p>
+  </div>
+</div>

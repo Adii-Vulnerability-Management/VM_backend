@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to the Organization</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f7fa;
+        margin: 0;
+        padding: 0;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 30px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #ddd;
+      }
+
+      .email-header {
+        background-color: #084179;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .email-body {
+        padding: 20px 30px;
+      }
+
+      .email-body p {
+        margin: 15px 0;
+        font-size: 14px;
+      }
+
+      .details {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-left: 4px solid #084179;
+        border-radius: 4px;
+      }
+
+      .details p {
+        margin: 5px 0;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 20px 0;
+        color: #ffffff;
+        background-color: #084179;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .button:hover {
+        background-color: #063358;
+      }
+
+      .email-footer {
+        padding: 15px;
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+        background-color: #f1f1f1;
+        border-top: 1px solid #ddd;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="email-container">
+      <div class="email-header">Welcome to GRC³!</div>
+      <div class="email-body">
+        <p>Dear <strong><%= name %></strong>,</p>
+        <p>
+          We are excited to have you on board! Your account has been
+          successfully created, and you can now access our system.
+        </p>
+
+        <div class="details">
+          <h3>Login Credentials</h3>
+          <p><strong>Username:</strong> <%= email %></p>
+          <p><strong>Password:</strong> <%= password %></p>
+        </div>
+
+        <div class="details">
+          <h3>Personal Information</h3>
+          <p><strong>Name:</strong> <%= name %></p>
+          <p><strong>Employee ID:</strong> <%= employeeId %></p>
+          <p><strong>Role:</strong> <%= role %></p>
+          <p><strong>Designation:</strong> <%= designation %></p>
+          <p><strong>Contact Number:</strong> <%= contactNumber %></p>
+        </div>
+
+        <p>
+          Please make sure to keep your login details secure. You can log in
+          using the button below:
+        </p>
+
+        <a href="<%= loginUrl %>" class="button">Log in to Your Account</a>
+
+        <p>
+          If you have any questions or need assistance, our support team is here
+          to help.
+        </p>
+
+        <p>Best Regards,</p>
+        <p><strong><%= userCompanyName %></strong></p>
+      </div>
+
+      <div class="email-footer">
+        This is an automated email. Please do not reply.<br />
+      </div>
+    </div>
+  </body>
+</html>

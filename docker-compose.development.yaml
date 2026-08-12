@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  nestjs:
+    # Build using Dockerfile and the "development" target stage
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development  # Use the "development" stage of the Dockerfile
+    ports:
+      - "8007:8007"  # Expose port 8005 for external access
+    volumes:
+      - .:/app  # Mount local code directory to container for live reloading
+      - /app/node_modules  # Avoid re-installing node_modules inside the container
+    environment:
+      NODE_ENV: development  # Set environment variable for development
+      CHOKIDAR_USEPOLLING=: true  # Enable polling for file watchers (important for Docker)
+
+    env_file:
+      - .env
+    command: ["npm", "run", "start:dev"]  # Run app in development mode (with hot-reloading)
+    networks:
+      - appnet  # Network configuration for isolation
+    working_dir: /app  # Set the working directory inside the container
+    dns:
+      - 8.8.8.8
+      - 0.0.0.0
+
+networks:
+  appnet:
+    # driver: bridge  # Bridge network for service communication
+    external: true  # Use an existing external network

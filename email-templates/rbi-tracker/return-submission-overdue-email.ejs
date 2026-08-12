@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Overdue Submission Notification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f7fa;
+        margin: 0;
+        padding: 0;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 30px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+      }
+
+      .email-header {
+        background-color: #e63946;
+        padding: 20px;
+        text-align: center;
+        color: #ffffff;
+      }
+
+      .email-header h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .email-body {
+        padding: 20px 30px;
+      }
+
+      .email-body p {
+        margin: 15px 0;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .details {
+        margin: 20px 0;
+      }
+
+      .details h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+        color: #e63946;
+      }
+
+      .details p {
+        margin: 3px 0;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .button {
+        display: inline-block;
+        margin: 20px 0;
+        padding: 10px 20px;
+        font-size: 14px;
+        color: #ffffff;
+        background-color: #e63946;
+        text-decoration: none;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      .button:hover {
+        background-color: #c53037;
+      }
+
+      .email-footer {
+        padding: 20px;
+        background-color: #f9f9f9;
+        text-align: center;
+        font-size: 12px;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-header">
+        <h1>Overdue Submission Alert</h1>
+      </div>
+      <div class="email-body">
+        <p>Dear <strong><%= employeeName %></strong>,</p>
+        <p>
+          This is to notify you that the submission date for the following
+          return has already passed. Immediate action is required to ensure
+          compliance.
+        </p>
+        <div class="details">
+          <h2>Return Details</h2>
+          <p><strong>Return Name:</strong> <%= returnName %></p>
+          <p><strong>Description:</strong> <%= returnDescription %></p>
+          <p><strong>Frequency:</strong> <%= frequency %></p>
+          <p><strong>Submission Date:</strong> <%= submissionDate %></p>
+          <p><strong>Report Code:</strong> <%= reportCode %></p>
+          <p><strong>Department Concerned:</strong> <%= departmentConcerned %></p>
+          <p>
+            <strong>Related Circulars:</strong> <%= detailsOfRelatedCirculars %>
+          </p>
+        </div>
+        <p>
+          Please take immediate action to submit the return. If you need
+          assistance, contact your supervisor or the concerned department at the
+          earliest.
+        </p>
+        <a href="<%= portalUrl %>" class="button">Go to Portal</a>
+        <p>Best Regards,</p>
+        <p><%= userCompanyName %></p>
+      </div>
+      <div class="email-footer">
+        This is an automated email. Please do not reply.
+      </div>
+    </div>
+  </body>
+</html>

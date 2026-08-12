@@ -1,0 +1,2 @@
+# Example only. Do not put real secrets in tfvars.
+aws_region = "ap-south-1"
