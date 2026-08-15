@@ -68,8 +68,7 @@ RUN pipx install semgrep==1.171.0 && pipx ensurepath
 COPY package.json package-lock.json ./
 RUN npm install --omit=dev --legacy-peer-deps
 COPY --from=build /app/dist ./dist
-COPY email-templates ./email-templates
-COPY public ./public
+
 
 # Persistent-ish scratch space for scanner data (Trivy/Dependency-Check DBs
 # download here on first use -- ephemeral per Fargate task unless you mount
