@@ -10,7 +10,37 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
 
+async function resolveMongoUrl(): Promise<string> {
+  const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/VM-dev';
+
+  try {
+    const probe = mongoose.createConnection();
+    await probe.openUri(mongoUrl, { serverSelectionTimeoutMS: 3000 } as ConnectOptions);
+    await probe.close();
+    console.log(`MongoDB reachable at ${mongoUrl}`);
+    return mongoUrl;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (process.env.NODE_ENV !== 'production') {
+      const mongoMemoryServer = await MongoMemoryServer.create();
+      const memoryMongoUrl = await mongoMemoryServer.getUri();
+      console.warn(
+        `MongoDB unavailable at ${mongoUrl} (${message}). Falling back to embedded in-memory MongoDB at ${memoryMongoUrl}. Data will not persist across restarts.`,
+      );
+      return memoryMongoUrl;
+    }
+
+    throw error;
+  }
+}
+
 async function bootstrap() {
+  // Resolve (and if needed, fall back to an embedded) Mongo URI *before*
+  // Nest builds the module graph, since MongooseModule.forRoot() in
+  // AppModule needs a working connection string at construction time.
+  process.env.MONGODB_URL = await resolveMongoUrl();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const apiPrefix = process.env.API_PREFIX || 'priv';
@@ -57,34 +87,6 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
-  }
-
-  const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/VM-dev';
-
-  try {
-    await mongoose.connect(mongoUrl, {
-      serverSelectionTimeoutMS: 3000,
-    } as ConnectOptions);
-    console.log(`MongoDB connected to ${mongoUrl}`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-
-    if (process.env.NODE_ENV !== 'production') {
-      try {
-        const mongoMemoryServer = await MongoMemoryServer.create();
-        const memoryMongoUrl = await mongoMemoryServer.getUri();
-        await mongoose.connect(memoryMongoUrl, {
-          serverSelectionTimeoutMS: 3000,
-        } as ConnectOptions);
-        console.log(`MongoDB connected to embedded server at ${memoryMongoUrl}`);
-      } catch (memoryError) {
-        const memoryMessage = memoryError instanceof Error ? memoryError.message : String(memoryError);
-        console.warn(`MongoDB unavailable at ${mongoUrl}. Continuing without database connection. ${message}`);
-        console.warn(`Embedded MongoDB fallback also failed: ${memoryMessage}`);
-      }
-    } else {
-      console.warn(`MongoDB unavailable at ${mongoUrl}. Continuing without database connection. ${message}`);
-    }
   }
 
   const port = Number(process.env.PORT || 3000);
