@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  id-token: write   # required for OIDC -> AWS role assumption
+  contents: read
+
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPOSITORY: ${{ vars.BACKEND_ECR_REPOSITORY }}
@@ -16,7 +20,7 @@ env:
 
 jobs:
   test:
-    name: Test
+    name: Build & lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,12 +28,18 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm install --legacy-peer-deps
-      # Adjust/remove this if the project doesn't have a real test script yet.
-      - run: npm test --if-present
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint --if-present
+      # NOTE: there is no test suite to run here. This job gates on "does it
+      # build and lint," not "does it work." Every deploy to a service that
+      # spawns Docker containers with host socket access is currently
+      # ungated by any actual test coverage. That's a real gap, not a style
+      # nit — worth closing before this pipeline is the only thing standing
+      # between a bad commit and prod.
 
-  build-and-push:
-    name: Build & push backend image to ECR
+  build-scan-push:
+    name: Build, self-scan, and push image to ECR
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -38,40 +48,58 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Log in to Amazon ECR
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image
+      - name: Build image
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest" .
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
+      # Self-scan before push. A vuln-management platform shipping an
+      # unscanned image of itself is the kind of gap someone will eventually
+      # point out. Fails the build on HIGH/CRITICAL by default — adjust
+      # severity threshold if that's too strict to start.
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
+
+      - name: Push image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker tag "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+
   deploy:
-    name: Deploy to ECS
-    needs: build-and-push
+    name: Deploy to ECS (EC2)
+    needs: build-scan-push
     runs-on: ubuntu-latest
+    environment: production   # requires a manual-approval reviewer set on
+                               # this GH Environment — see note below
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Download current task definition
@@ -81,15 +109,13 @@ jobs:
             --query taskDefinition \
             > task-definition.json
 
-      # Only touches the "app" container's image -- the Redis sidecar
-      # container already defined in the task stays as-is.
       - name: Render new task definition with the new image
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ needs.build-and-push.outputs.image }}
+          image: ${{ needs.build-scan-push.outputs.image }}
 
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
@@ -98,3 +124,29 @@ jobs:
           cluster: ${{ env.ECS_CLUSTER }}
           service: ${{ env.ECS_SERVICE }}
           wait-for-service-stability: true
+
+# ---------------------------------------------------------------------------
+# Things this YAML file cannot do for you — they're infrastructure, not
+# pipeline config, and this deploy will not work correctly without them:
+#
+# 1. The docker.sock bind mount goes in the ECS TASK DEFINITION (a
+#    "volumes" entry of type "host" pointing at /var/run/docker.sock, plus a
+#    matching mountPoint on the container) — not in this workflow file.
+#
+# 2. This assumes an ECS capacity provider backed by an EC2 Auto Scaling
+#    Group already exists (Fargate doesn't support the socket mount). If
+#    that ASG/capacity provider isn't already provisioned, the task will
+#    never place and this workflow will hang at "wait-for-service-stability"
+#    until it times out.
+#
+# 3. AWS_DEPLOY_ROLE_ARN assumes you've set up GitHub's OIDC identity
+#    provider in AWS IAM and a role that trusts it, scoped to this repo. If
+#    you're currently using long-lived AWS_ACCESS_KEY_ID/SECRET as repo
+#    secrets (as the frontend workflow does today), that's the thing worth
+#    replacing first — it's the higher-value fix of everything here.
+#
+# 4. For a rollback safety net beyond this file: enable the ECS deployment
+#    circuit breaker with rollback on the service itself (service config,
+#    not this workflow) so a task that fails health checks gets
+#    auto-reverted instead of leaving the service degraded.
+# ---------------------------------------------------------------------------
