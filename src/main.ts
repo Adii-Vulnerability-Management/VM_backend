@@ -4,7 +4,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { ConnectOptions } from 'mongoose';
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -26,6 +25,7 @@ async function resolveMongoUrl(): Promise<string> {
     const message = error instanceof Error ? error.message : String(error);
 
     if (process.env.NODE_ENV !== 'production') {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
       const mongoMemoryServer = await MongoMemoryServer.create();
       const memoryMongoUrl = await mongoMemoryServer.getUri();
       console.warn(
