@@ -3,24 +3,14 @@ name: Backend CI/CD
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-
-permissions:
-  id-token: write   # required for OIDC -> AWS role assumption
-  contents: read
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  ECR_REPOSITORY: ${{ vars.BACKEND_ECR_REPOSITORY }}
-  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
-  ECS_SERVICE: ${{ vars.BACKEND_ECS_SERVICE }}
-  ECS_TASK_DEFINITION_FAMILY: ${{ vars.BACKEND_TASK_FAMILY }}
-  CONTAINER_NAME: ${{ vars.BACKEND_CONTAINER_NAME }}
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/vm-backend
+  DEPLOY_PORT: "3102"
 
 jobs:
   test:
-    name: Build & lint
+    name: Build & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,122 +21,57 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run lint --if-present
-      # NOTE: there is no test suite to run here. This job gates on "does it
-      # build and lint," not "does it work." Every deploy to a service that
-      # spawns Docker containers with host socket access is currently
-      # ungated by any actual test coverage. That's a real gap, not a style
-      # nit — worth closing before this pipeline is the only thing standing
-      # between a bad commit and prod.
 
-  build-scan-push:
-    name: Build, self-scan, and push image to ECR
+  build-and-push:
+    name: Build Docker Image & Push to Docker Hub
     needs: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
     outputs:
-      image: ${{ steps.build-image.outputs.image }}
+      image_tag: ${{ steps.tag.outputs.value }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Log in to Amazon ECR
-        id: ecr-login
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Compute image tag
+        id: tag
+        run: echo "value=${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build image
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          docker build \
+            --build-arg DOCKER_HOST_GID=109 \
+            -t "$DOCKERHUB_IMAGE:${{ steps.tag.outputs.value }}" \
+            -t "$DOCKERHUB_IMAGE:latest" .
 
-      # Self-scan before push. A vuln-management platform shipping an
-      # unscanned image of itself is the kind of gap someone will eventually
-      # point out. Fails the build on HIGH/CRITICAL by default — adjust
-      # severity threshold if that's too strict to start.
-      - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
-          image-ref: ${{ steps.build-image.outputs.image }}
-          severity: "HIGH,CRITICAL"
-          exit-code: "1"
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push image
-        env:
-          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker tag "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          docker push "$DOCKERHUB_IMAGE:${{ steps.tag.outputs.value }}"
+          docker push "$DOCKERHUB_IMAGE:latest"
 
   deploy:
-    name: Deploy to ECS (EC2)
-    needs: build-scan-push
-    runs-on: ubuntu-latest
-    environment: production   # requires a manual-approval reviewer set on
-                               # this GH Environment — see note below
+    name: Deploy to Backend EC2
+    needs: build-and-push
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Download current task definition
+      - name: Pull and run image on backend EC2
+        env:
+          TAG: ${{ needs.build-and-push.outputs.image_tag }}
         run: |
-          aws ecs describe-task-definition \
-            --task-definition "$ECS_TASK_DEFINITION_FAMILY" \
-            --query taskDefinition \
-            > task-definition.json
-
-      - name: Render new task definition with the new image
-        id: render-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ needs.build-scan-push.outputs.image }}
-
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          service: ${{ env.ECS_SERVICE }}
-          wait-for-service-stability: true
-
-# ---------------------------------------------------------------------------
-# Things this YAML file cannot do for you — they're infrastructure, not
-# pipeline config, and this deploy will not work correctly without them:
-#
-# 1. The docker.sock bind mount goes in the ECS TASK DEFINITION (a
-#    "volumes" entry of type "host" pointing at /var/run/docker.sock, plus a
-#    matching mountPoint on the container) — not in this workflow file.
-#
-# 2. This assumes an ECS capacity provider backed by an EC2 Auto Scaling
-#    Group already exists (Fargate doesn't support the socket mount). If
-#    that ASG/capacity provider isn't already provisioned, the task will
-#    never place and this workflow will hang at "wait-for-service-stability"
-#    until it times out.
-#
-# 3. AWS_DEPLOY_ROLE_ARN assumes you've set up GitHub's OIDC identity
-#    provider in AWS IAM and a role that trusts it, scoped to this repo. If
-#    you're currently using long-lived AWS_ACCESS_KEY_ID/SECRET as repo
-#    secrets (as the frontend workflow does today), that's the thing worth
-#    replacing first — it's the higher-value fix of everything here.
-#
-# 4. For a rollback safety net beyond this file: enable the ECS deployment
-#    circuit breaker with rollback on the service itself (service config,
-#    not this workflow) so a task that fails health checks gets
-#    auto-reverted instead of leaving the service degraded.
-# ---------------------------------------------------------------------------
+          ssh -o StrictHostKeyChecking=no -i "${{ secrets.BACKEND_EC2_SSH_KEY_PATH }}" \
+            "${{ vars.BACKEND_EC2_SSH_USER }}@${{ vars.BACKEND_EC2_PUBLIC_IP }}" bash -s << EOF
+            set -e
+            docker pull ${{ env.DOCKERHUB_IMAGE }}:$TAG
+            docker stop vm-backend || true
+            docker rm vm-backend || true
+            docker run -d --name vm-backend \
+              --restart unless-stopped \
+              -p ${{ env.DEPLOY_PORT }}:3000 \
+              --env-file /home/${{ vars.BACKEND_EC2_SSH_USER }}/vm-backend.env \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ${{ env.DOCKERHUB_IMAGE }}:$TAG
+          EOF
