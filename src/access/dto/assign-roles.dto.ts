@@ -12,19 +12,19 @@ import { Type } from 'class-transformer';
 /** DTO for assigning module-level access and permissions.
  * This obkect is used inside 'AssignRolesDto.modules
  * to define which modules/submodules a user can access
- */  
+ */
 
 export class AssignRoleModuleDto {
   @IsString()
-  moduleKey: string;   // Unique key/identifier of the module    
+  moduleKey: string; // Unique key/identifier of the module
 
   @IsOptional()
   @IsArray()
-  permissions?: string[];  // List of permission of the modules
+  permissions?: string[]; // List of permission of the modules
 
   @IsOptional()
   @IsArray()
-  subModules?: string[];  // List of submodules of the modules
+  subModules?: string[]; // List of submodules of the modules
 
   @IsOptional()
   @IsDateString()
@@ -39,12 +39,12 @@ export class AssignRoleModuleDto {
   note?: string;
 }
 /* main DTO for assign roles to a user
-  * assign multiple roles, module-wise permission, temporary access dates and email notifiaction option */
+ * assign multiple roles, module-wise permission, temporary access dates and email notifiaction option */
 
 export class AssignRolesDto {
   @IsOptional()
   @IsNumber()
-  user_id?: number; // internal user_id 
+  user_id?: number; // internal user_id
 
   @IsOptional()
   @IsEmail()

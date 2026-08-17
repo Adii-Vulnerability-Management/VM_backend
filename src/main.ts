@@ -4,13 +4,46 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { ConnectOptions } from 'mongoose';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
 
+async function resolveMongoUrl(): Promise<string> {
+  const mongoUrl =
+    process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/VM-dev';
+
+  try {
+    const probe = mongoose.createConnection();
+    await probe.openUri(mongoUrl, {
+      serverSelectionTimeoutMS: 3000,
+    } as ConnectOptions);
+    await probe.close();
+    console.log(`MongoDB reachable at ${mongoUrl}`);
+    return mongoUrl;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (process.env.NODE_ENV !== 'production') {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const mongoMemoryServer = await MongoMemoryServer.create();
+      const memoryMongoUrl = await mongoMemoryServer.getUri();
+      console.warn(
+        `MongoDB unavailable at ${mongoUrl} (${message}). Falling back to embedded in-memory MongoDB at ${memoryMongoUrl}. Data will not persist across restarts.`,
+      );
+      return memoryMongoUrl;
+    }
+
+    throw error;
+  }
+}
+
 async function bootstrap() {
+  // Resolve (and if needed, fall back to an embedded) Mongo URI *before*
+  // Nest builds the module graph, since MongooseModule.forRoot() in
+  // AppModule needs a working connection string at construction time.
+  process.env.MONGODB_URL = await resolveMongoUrl();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const apiPrefix = process.env.API_PREFIX || 'priv';
@@ -59,40 +92,14 @@ async function bootstrap() {
     SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
   }
 
-  const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/VM-dev';
-
-  try {
-    await mongoose.connect(mongoUrl, {
-      serverSelectionTimeoutMS: 3000,
-    } as ConnectOptions);
-    console.log(`MongoDB connected to ${mongoUrl}`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-
-    if (process.env.NODE_ENV !== 'production') {
-      try {
-        const mongoMemoryServer = await MongoMemoryServer.create();
-        const memoryMongoUrl = await mongoMemoryServer.getUri();
-        await mongoose.connect(memoryMongoUrl, {
-          serverSelectionTimeoutMS: 3000,
-        } as ConnectOptions);
-        console.log(`MongoDB connected to embedded server at ${memoryMongoUrl}`);
-      } catch (memoryError) {
-        const memoryMessage = memoryError instanceof Error ? memoryError.message : String(memoryError);
-        console.warn(`MongoDB unavailable at ${mongoUrl}. Continuing without database connection. ${message}`);
-        console.warn(`Embedded MongoDB fallback also failed: ${memoryMessage}`);
-      }
-    } else {
-      console.warn(`MongoDB unavailable at ${mongoUrl}. Continuing without database connection. ${message}`);
-    }
-  }
-
   const port = Number(process.env.PORT || 3000);
-  const fallbackPort = await listenWithFallback(app, port, apiPrefix);
-  console.log(`Application is running on: http://localhost:${fallbackPort}/${apiPrefix}`);
+  const fallbackPort = await listenWithFallback(app, port);
+  console.log(
+    `Application is running on: http://localhost:${fallbackPort}/${apiPrefix}`,
+  );
 }
 
-async function listenWithFallback(app: NestExpressApplication, port: number, apiPrefix: string) {
+async function listenWithFallback(app: NestExpressApplication, port: number) {
   let currentPort = port;
 
   while (true) {
@@ -103,7 +110,9 @@ async function listenWithFallback(app: NestExpressApplication, port: number, api
       const err = error as NodeJS.ErrnoException;
 
       if (err.code === 'EADDRINUSE') {
-        console.warn(`Port ${currentPort} is busy. Trying ${currentPort + 1} instead.`);
+        console.warn(
+          `Port ${currentPort} is busy. Trying ${currentPort + 1} instead.`,
+        );
         currentPort += 1;
         continue;
       }

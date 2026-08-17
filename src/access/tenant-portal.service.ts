@@ -218,7 +218,7 @@ ${appName}`;
     const permissionKeys = Array.from(
       new Set([
         ...(Array.isArray(enabledPermissions) ? enabledPermissions : []),
-         ...enabledPermissions,
+        ...enabledPermissions,
         'access.roles.assign',
       ]),
     );
@@ -530,25 +530,24 @@ ${appName}`;
   }
 
   async getByTenantId(tenantId: string) {
-      const normalizedTenantId = this.normalizeTenantId(tenantId);
+    const normalizedTenantId = this.normalizeTenantId(tenantId);
 
-      console.log('TENANT_MODEL_DEBUG', {
-    dbName: (this.tenantModel as any).db?.name,
-    collectionName:
-      (this.tenantModel as any).collection?.collectionName,
-    normalizedTenantId,
-  });
+    console.log('TENANT_MODEL_DEBUG', {
+      dbName: (this.tenantModel as any).db?.name,
+      collectionName: (this.tenantModel as any).collection?.collectionName,
+      normalizedTenantId,
+    });
 
     const doc = await this.tenantModel
       .findOne({ tenantId: this.normalizeTenantId(tenantId) })
       .lean();
     if (!doc) throw new NotFoundException('Tenant not found');
     {
-       console.log('TENANT_NOT_FOUND_DEBUG', {
-      receivedTenantId: tenantId,
-      normalizedTenantId,
-    });
-    } 
+      console.log('TENANT_NOT_FOUND_DEBUG', {
+        receivedTenantId: tenantId,
+        normalizedTenantId,
+      });
+    }
     return doc;
   }
 
@@ -556,13 +555,13 @@ ${appName}`;
     const tid = this.actorTenantId(actor);
 
     console.log('GET_CURRENT_TENANT_DEBUG', {
-    actorTenantId: tid,
-    normalizedTenantId: tid ? this.normalizeTenantId(tid) : null,
-    actorTenantIdSnake: actor?.tenant_id,
-    actorTenantIdCamel: actor?.tenantId,
-    actorEmail: actor?.email || actor?.user_email,
-    roles: actor?.roles,
-  });
+      actorTenantId: tid,
+      normalizedTenantId: tid ? this.normalizeTenantId(tid) : null,
+      actorTenantIdSnake: actor?.tenant_id,
+      actorTenantIdCamel: actor?.tenantId,
+      actorEmail: actor?.email || actor?.user_email,
+      roles: actor?.roles,
+    });
 
     if (!tid) throw new BadRequestException('User has no tenant_id');
     return this.getByTenantId(tid);
@@ -693,7 +692,7 @@ ${appName}`;
     const permissionKeys = Array.from(
       new Set([
         ...(Array.isArray(enabledPermissions) ? enabledPermissions : []),
-         ...enabledPermissions,
+        ...enabledPermissions,
         'access.roles.assign',
       ]),
     );

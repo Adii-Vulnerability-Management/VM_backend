@@ -14,9 +14,7 @@ export function parseCookies(req: Request): Record<string, string> {
 function cookieOpts() {
   const secure = /^true$/i.test(process.env.CUSTOM_TOKEN_COOKIE_SECURE || '');
   const sameSite = (process.env.CUSTOM_TOKEN_COOKIE_SAMESITE || 'lax') as
-    | 'lax'
-    | 'strict'
-    | 'none';
+    'lax' | 'strict' | 'none';
 
   return { secure, sameSite };
 }

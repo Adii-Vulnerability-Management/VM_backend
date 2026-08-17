@@ -53,19 +53,16 @@ export class PermissionsGuard implements CanActivate {
   }
 
   private isPlatformAdminRole(user: any): boolean {
-  const roles = Array.isArray(user?.roles)
-    ? user.roles
-        .map((role: any) => this.normalizeRoleKey(role))
-        .filter(Boolean)
-    : [];
+    const roles = Array.isArray(user?.roles)
+      ? user.roles
+          .map((role: any) => this.normalizeRoleKey(role))
+          .filter(Boolean)
+      : [];
 
-  const platformAdminRoles = new Set([
-    'SUPER_ADMIN',
-    'ADMIN',
-  ]);
+    const platformAdminRoles = new Set(['SUPER_ADMIN', 'ADMIN']);
 
-  return roles.some((role) => platformAdminRoles.has(role));
-}
+    return roles.some((role) => platformAdminRoles.has(role));
+  }
 
   // ✅ one-time bootstrap allowlist by email (from .env)
   private isBootstrapEmail(user: any): boolean {
@@ -153,12 +150,9 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Only true platform super admins bypass permission checks globally.
-    if (
-  this.isDjangoSuperAdmin(user) ||
-  this.isPlatformAdminRole(user)
-) {
-  return true;
-}
+    if (this.isDjangoSuperAdmin(user) || this.isPlatformAdminRole(user)) {
+      return true;
+    }
 
     // resolve permissions
     let permissionKeys: string[] = Array.isArray((user as any).permissionKeys)

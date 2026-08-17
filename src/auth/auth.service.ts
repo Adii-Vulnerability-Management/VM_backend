@@ -1,6 +1,6 @@
 // ✅ FILE: backend/src/auth/auth.service.ts
 
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
@@ -707,7 +707,6 @@ export class AuthService {
     }
 
     const user = await this.findUserFromJwtPayload(payload);
-    const email = this.normalizeEmail(payload.email || '');
     // console.log('[AUTH_SERVICE][CHECK_AUTH_DB_USER]', {
     //   lookupEmail: email,
     //   found: !!user,
@@ -850,7 +849,7 @@ export class AuthService {
         console.error('LOGIN STEP ERROR: updateLoginTracking', err);
       }
 
-      let refreshedUser =
+      const refreshedUser =
         (await this.mongo.collection('users').findOne({ _id: user._id })) ||
         user;
 
@@ -966,17 +965,7 @@ export class AuthService {
         email: emailNorm,
         user_id: refreshedUser?.user_id,
       });
-      // Correcting the async issue: use await instead of then()
-      const u = await this.mongo
-        .collection('users')
-        .find({ email: 'aditya.p+vlr28@kritikalhire.com' })
-        .toArray();
 
-      // This will log the result after the query has resolved
-      // console.log(
-      //   'userrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',
-      //   JSON.stringify(u, null, 2),
-      // );
       return {
         statusCode: 200,
         body: {
@@ -1335,6 +1324,7 @@ export class AuthService {
         Subject: { Data: subject, Charset: 'UTF-8' },
         Body: {
           Text: { Data: text, Charset: 'UTF-8' },
+          ...(html ? { Html: { Data: html, Charset: 'UTF-8' } } : {}),
         },
       },
     });
@@ -1565,7 +1555,7 @@ export class AuthService {
 
     const email = this.resolveEmailFromUser(user);
 
-    let secretDoc: any = await this.mongo
+    const secretDoc: any = await this.mongo
       .collection('totp_secrets')
       .findOne({ email });
 

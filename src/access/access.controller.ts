@@ -8,10 +8,8 @@ import {
   Put,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 import { RbacService } from './rbac.service';
-import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 import { AssignAccessDto } from './dto/assign-access.dto';
 import { AssignRolesDto } from './dto/assign-roles.dto';

@@ -1470,8 +1470,10 @@ export class RbacService {
       throw new BadRequestException('Target user is not in selected tenant');
     }
 
-    let startDate: Date | null = bodyStartDate ? new Date(bodyStartDate) : null;
-    let endDate: Date | null = bodyEndDate ? new Date(bodyEndDate) : null;
+    const startDate: Date | null = bodyStartDate
+      ? new Date(bodyStartDate)
+      : null;
+    const endDate: Date | null = bodyEndDate ? new Date(bodyEndDate) : null;
 
     if (startDate && endDate) {
       if (
@@ -2201,7 +2203,7 @@ export class RbacService {
     const action = body?.action ? String(body.action).trim().toUpperCase() : '';
     const deleteAll = body?.deleteAll === true;
 
-    let filter: any = {};
+    const filter: any = {};
     const tenant = this.tenantScope(actor);
 
     if (id) {

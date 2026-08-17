@@ -1,17 +1,20 @@
 import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import { Public } from './decorators/public.decorator';
 
 @Controller('apiv1')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Get('')
   async checkAuth(@Req() req: Request, @Res() res: Response) {
     const result = await this.authService.checkAuthenticated(req);
     return res.status(result.statusCode).json(result.body);
   }
 
+  @Public()
   @Post('login')
   async login(@Req() req: Request, @Res() res: Response) {
     const body: any = (req as any).body || {};
@@ -45,6 +48,7 @@ export class AuthController {
     return this.authService.createUserAndEmailPasswordLikeDjango(body, req);
   }
 
+  @Public()
   @Post('password/reset/request')
   async requestPasswordReset(
     @Body() body: any,
@@ -63,6 +67,7 @@ export class AuthController {
     return res.status(result.statusCode).json(result.body);
   }
 
+  @Public()
   @Post('password/reset/confirm')
   async confirmPasswordReset(
     @Body() body: any,
@@ -130,6 +135,7 @@ export class AuthController {
     return res.status(result.statusCode).json(result.body);
   }
 
+  @Public()
   @Get('token/refresh')
   async refresh(@Req() req: Request, @Res() res: Response) {
     const result = await this.authService.refreshAccessLikeDjango(req, res);

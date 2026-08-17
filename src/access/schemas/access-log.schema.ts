@@ -49,7 +49,7 @@ export class AccessLog {
   @Prop({ type: [String], default: [] })
   oldModules?: string[];
 
-  // modules assigned to the user after action was perform 
+  // modules assigned to the user after action was perform
   @Prop({ type: [String], default: [] })
   newModules?: string[];
 
