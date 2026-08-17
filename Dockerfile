@@ -32,12 +32,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # --- system deps for the scanner toolchain ---
-# NOTE: this mixes Node, Python, and Java runtimes plus ~10 external tools in
-# one image. That's image bloat and a wide dependency-conflict surface (e.g.
-# checkov/prowler/scoutsuite are all Python packages that can clash on
-# transitive versions) — isolated venvs below reduce but don't eliminate that.
-# A cleaner long-term design splits scanner execution into its own image/task
-# instead of embedding everything here; not redoing that architecture now.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       curl ca-certificates gnupg lsb-release \
       python3 python3-venv python3-pip \
@@ -63,12 +57,11 @@ RUN python3 -m venv /opt/venvs/prowler && /opt/venvs/prowler/bin/pip install --n
 RUN python3 -m venv /opt/venvs/scoutsuite && /opt/venvs/scoutsuite/bin/pip install --no-cache-dir scoutsuite
 ENV PATH="/opt/venvs/semgrep/bin:/opt/venvs/checkov/bin:/opt/venvs/prowler/bin:/opt/venvs/scoutsuite/bin:${PATH}"
 
-# --- Go/binary-release scanners: pin exact versions before shipping this.
-# Left as build args so a version bump doesn't require editing the Dockerfile. ---
+# --- Go/binary-release scanners ---
 ARG GITLEAKS_VERSION=8.21.2
 ARG OSV_SCANNER_VERSION=1.9.2
-ARG TRIVY_VERSION=0.58.1
-ARG DEP_CHECK_VERSION=10.0.4
+ARG TRIVY_VERSION=0.74.0
+ARG DEP_CHECK_VERSION=12.1.0
 
 RUN curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
       | tar -xz -C /usr/local/bin gitleaks
@@ -79,7 +72,7 @@ RUN curl -fsSL "https://github.com/google/osv-scanner/releases/download/v${OSV_S
 RUN curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
       | tar -xz -C /usr/local/bin trivy
 
-RUN curl -fsSL "https://github.com/jeremylong/DependencyCheck/releases/download/v${DEP_CHECK_VERSION}/dependency-check-${DEP_CHECK_VERSION}-release.zip" \
+RUN curl -fsSL "https://github.com/dependency-check/DependencyCheck/releases/download/v${DEP_CHECK_VERSION}/dependency-check-${DEP_CHECK_VERSION}-release.zip" \
       -o /tmp/dc.zip \
     && unzip -q /tmp/dc.zip -d /opt \
     && ln -s /opt/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check \
@@ -87,9 +80,6 @@ RUN curl -fsSL "https://github.com/jeremylong/DependencyCheck/releases/download/
 
 # --- app user with docker-group membership so it can talk to the mounted
 # socket without running the whole process as root ---
-# The GID here MUST match the docker.sock GID on the EC2 host — confirm
-# against the actual AMI (varies by ECS-optimized image version) and set it
-# via --build-arg at build time if it differs.
 ARG DOCKER_HOST_GID=999
 RUN groupadd -g ${DOCKER_HOST_GID} dockerhost \
     && useradd -m -s /bin/bash -G dockerhost appuser
