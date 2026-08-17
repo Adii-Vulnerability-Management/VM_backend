@@ -19,9 +19,13 @@ export class AuthGuard implements CanActivate {
     ]);
     if (isPublic) return true;
 
-    const req = context.switchToHttp().getRequest<Request & { [k: string]: any }>();
+    const req = context
+      .switchToHttp()
+      .getRequest<Request & { [k: string]: any }>();
     if (!req.user_data) {
-      throw new UnauthorizedException('Authentication credentials were not provided.');
+      throw new UnauthorizedException(
+        'Authentication credentials were not provided.',
+      );
     }
 
     return true;

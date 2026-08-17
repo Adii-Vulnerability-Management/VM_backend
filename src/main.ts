@@ -11,11 +11,14 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function resolveMongoUrl(): Promise<string> {
-  const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/VM-dev';
+  const mongoUrl =
+    process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/VM-dev';
 
   try {
     const probe = mongoose.createConnection();
-    await probe.openUri(mongoUrl, { serverSelectionTimeoutMS: 3000 } as ConnectOptions);
+    await probe.openUri(mongoUrl, {
+      serverSelectionTimeoutMS: 3000,
+    } as ConnectOptions);
     await probe.close();
     console.log(`MongoDB reachable at ${mongoUrl}`);
     return mongoUrl;
@@ -90,11 +93,13 @@ async function bootstrap() {
   }
 
   const port = Number(process.env.PORT || 3000);
-  const fallbackPort = await listenWithFallback(app, port, apiPrefix);
-  console.log(`Application is running on: http://localhost:${fallbackPort}/${apiPrefix}`);
+  const fallbackPort = await listenWithFallback(app, port);
+  console.log(
+    `Application is running on: http://localhost:${fallbackPort}/${apiPrefix}`,
+  );
 }
 
-async function listenWithFallback(app: NestExpressApplication, port: number, apiPrefix: string) {
+async function listenWithFallback(app: NestExpressApplication, port: number) {
   let currentPort = port;
 
   while (true) {
@@ -105,7 +110,9 @@ async function listenWithFallback(app: NestExpressApplication, port: number, api
       const err = error as NodeJS.ErrnoException;
 
       if (err.code === 'EADDRINUSE') {
-        console.warn(`Port ${currentPort} is busy. Trying ${currentPort + 1} instead.`);
+        console.warn(
+          `Port ${currentPort} is busy. Trying ${currentPort + 1} instead.`,
+        );
         currentPort += 1;
         continue;
       }

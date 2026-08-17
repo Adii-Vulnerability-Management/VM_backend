@@ -48,30 +48,36 @@ export const MODULE_ROLE_PERMISSIONS = {
     },
 
     // Add this block inside the modules array in roles-permissions.ts
-// Place it after the 'operations' module block
+    // Place it after the 'operations' module block
 
-{
-  key: 'breach_email_notification',
-  label: 'Breach Email Notification',
-  submodules: ['Campaign', 'Recipients', 'Template', 'Remedies', 'Delivery'],
-  roles: {
-    viewer: ['read'],
-    editor: ['read', 'upload'],
-    manager: ['read', 'upload', 'configure'],
-    admin: ['read', 'create', 'upload', 'configure', 'send', 'manage'],
-  },
-  permissions: {
-    campaign: ['create', 'read'],
-    recipients: ['upload', 'read'],
-    template: ['read', 'edit'],
-    remedies: ['read', 'edit'],
-    preview: ['read'],
-    send: ['trigger'],
-    delivery: ['read'],
-    audit_log: ['read'],
-    settings: ['read', 'configure'],
-  },
-},
+    {
+      key: 'breach_email_notification',
+      label: 'Breach Email Notification',
+      submodules: [
+        'Campaign',
+        'Recipients',
+        'Template',
+        'Remedies',
+        'Delivery',
+      ],
+      roles: {
+        viewer: ['read'],
+        editor: ['read', 'upload'],
+        manager: ['read', 'upload', 'configure'],
+        admin: ['read', 'create', 'upload', 'configure', 'send', 'manage'],
+      },
+      permissions: {
+        campaign: ['create', 'read'],
+        recipients: ['upload', 'read'],
+        template: ['read', 'edit'],
+        remedies: ['read', 'edit'],
+        preview: ['read'],
+        send: ['trigger'],
+        delivery: ['read'],
+        audit_log: ['read'],
+        settings: ['read', 'configure'],
+      },
+    },
 
     {
       key: 'risk',

@@ -50,15 +50,24 @@ export class AuthMiddleware implements NestMiddleware {
 
       const payload: any = jwt.verify(token, secret);
       const userId = Number(payload?.user_id);
-      const email = String(payload?.email || '').toLowerCase().trim();
+      const email = String(payload?.email || '')
+        .toLowerCase()
+        .trim();
 
       let user: any = null;
       if (!Number.isNaN(userId)) {
-        user = await this.mongo.collection('users').findOne({ user_id: userId });
+        user = await this.mongo
+          .collection('users')
+          .findOne({ user_id: userId });
       }
       if (!user && email) {
         user = await this.mongo.collection('users').findOne({
-          email: { $regex: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+          email: {
+            $regex: new RegExp(
+              `^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
+              'i',
+            ),
+          },
         });
       }
 

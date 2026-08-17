@@ -4,12 +4,10 @@ import { HydratedDocument } from 'mongoose';
 export type UserAccessAssignmentDocument =
   HydratedDocument<UserAccessAssignment>;
 
-  // Embedded schema for module-level access details
-  // each module can have own permissions, sub-modules
-  // validity dates, notes and timestamps
+// Embedded schema for module-level access details
+// each module can have own permissions, sub-modules
+// validity dates, notes and timestamps
 export class AccessModule {
-
-
   // unique key/name of the module assigned to the user
   @Prop({ required: true, trim: true })
   moduleKey: string;

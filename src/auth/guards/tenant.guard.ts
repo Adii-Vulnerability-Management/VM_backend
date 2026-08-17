@@ -39,7 +39,9 @@ export class TenantGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<Request & { [k: string]: any }>();
+    const req = context
+      .switchToHttp()
+      .getRequest<Request & { [k: string]: any }>();
     const user = req?.user_data;
 
     // Public/unauthenticated routes are handled elsewhere.
@@ -64,7 +66,9 @@ export class TenantGuard implements CanActivate {
     }
 
     if (headerTenantId && headerTenantId !== userTenantId) {
-      throw new ForbiddenException('Tenant mismatch: header tenant is not allowed');
+      throw new ForbiddenException(
+        'Tenant mismatch: header tenant is not allowed',
+      );
     }
 
     // Enforce trusted tenant context for all non-super users.
