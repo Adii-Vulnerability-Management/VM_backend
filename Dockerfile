@@ -51,11 +51,18 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /tmp/docker.gpg \
 
 # --- Python-based scanners, isolated in their own venvs to limit
 # cross-tool dependency collisions ---
+# NOTE: checkov, prowler, and scoutsuite were removed here -- confirmed via
+# grep against vm-scanner.constants.ts that none of them appear in the
+# app's own VM_SCANNER_VALUES list. No code path in this repo ever invokes
+# them. They were also the single largest contributors to image size and
+# build time: prowler and scoutsuite each pull in full AWS/Azure/Alibaba
+# Cloud SDKs (boto3, azure-mgmt-*, aliyun-python-sdk-*) meant for scanning
+# LIVE cloud accounts, which isn't something this app's scan orchestration
+# supports triggering anyway. If cloud-account scanning becomes a real
+# feature later, re-add the specific tool then, wired to an actual
+# scanner-runner.service.ts code path -- not speculatively.
 RUN python3 -m venv /opt/venvs/semgrep && /opt/venvs/semgrep/bin/pip install --no-cache-dir semgrep
-RUN python3 -m venv /opt/venvs/checkov && /opt/venvs/checkov/bin/pip install --no-cache-dir checkov
-RUN python3 -m venv /opt/venvs/prowler && /opt/venvs/prowler/bin/pip install --no-cache-dir prowler
-RUN python3 -m venv /opt/venvs/scoutsuite && /opt/venvs/scoutsuite/bin/pip install --no-cache-dir scoutsuite
-ENV PATH="/opt/venvs/semgrep/bin:/opt/venvs/checkov/bin:/opt/venvs/prowler/bin:/opt/venvs/scoutsuite/bin:${PATH}"
+ENV PATH="/opt/venvs/semgrep/bin:${PATH}"
 
 # --- Go/binary-release scanners ---
 ARG GITLEAKS_VERSION=8.21.2
